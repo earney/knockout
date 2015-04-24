@@ -13,6 +13,9 @@ logging.addLevelName(SOURCE, "SOURCE")
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger()
 
+_py2=sys.version_info < (3,0)
+
+from .ex import exec_
 
 class Loader:
     """ A basic module loader.
@@ -42,7 +45,7 @@ class Loader:
         log.debug("load_module: executing %s's source..." % fullname)
 
         try:
-            exec self.source in mod.__dict__
+            exec_(self.source, mod.__dict__)
         except:
             if fullname in sys.modules:
                 del sys.modules[fullname]
@@ -108,7 +111,7 @@ class Importer:
             try:
                 source, fullpath = self.get_source(fullname, ispkg=ispkg)
                 loader = self.get_loader(source, fullpath, ispkg)
-            except Exception, e:
+            except Exception as e:
                 self.debug("find_module: %s: failed to get '%s'. (%s)" % ({True: 'PKG', False: 'MOD'}.get(ispkg), fullname, e))
             else:
                 self.debug("find_module: %s: got '%s'. mpath=%s" % ({True: 'PKG', False: 'MOD'}.get(ispkg), fullname, mpath))            
@@ -135,7 +138,11 @@ class Importer:
         """ Get the source for the new module to be loaded.
         """
         fullpath = self.fullpath(fullname, ispkg)
-        return open(fullpath).read().replace("\r\n", "\n"), fullpath
+
+        if _py2:
+           return open(fullpath).read().replace("\r\n", "\n"), fullpath
+
+        return open(fullpath).read().decode('utf-8').replace("\r\n", "\n"), fullpath
 
     def get_loader(self, source, fullpath, ispkg):
         """ Get the loader instance to load the new module.

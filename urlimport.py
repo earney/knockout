@@ -6,8 +6,15 @@ See PEP 302(http://www.python.org/dev/peps/pep-0302/) for more info.
 
 import sys, re
 import knockout
-from urlparse import urljoin
-from urllib2 import urlopen
+
+_py2=sys.version_info < (3,0)
+
+if _py2:
+  from urlparse import urljoin
+  from urllib2 import urlopen
+else:
+  from urllib.parse import urljoin
+  from urllib.request import urlopen
 
 log = knockout.log
 
@@ -32,7 +39,10 @@ class UrlImporter(knockout.Importer):
             raise Exception("Not allowed to import '%s'." % fullname)
             
         fullpath = self.fullpath(fullname, ispkg)
-        return urlopen(fullpath).read().replace("\r\n", "\n"), fullpath
+        if _py2:
+           return urlopen(fullpath).read().replace("\r\n", "\n"), fullpath
+
+        return urlopen(fullpath).read().decode('utf-8').replace("\r\n", "\n"), fullpath
 
     def get_loader(self, source, fullpath, ispkg):
         """ Get the loader instance to load the new module.

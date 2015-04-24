@@ -1,0 +1,19 @@
+# Implementation of exec_ is from ``six``:
+import sys
+PY3 = sys.version_info >= (3,0)
+
+if PY3:
+    import builtins
+    exec_ = getattr(builtins, "exec")
+else:
+    def exec_(code, globs=None, locs=None):
+        """Execute code in a namespace."""
+        if globs is None:
+            frame = sys._getframe(1)
+            globs = frame.f_globals
+            if locs is None:
+                locs = frame.f_locals
+            del frame
+        elif locs is None:
+            locs = globs
+        exec("""exec code in globs, locs""")
